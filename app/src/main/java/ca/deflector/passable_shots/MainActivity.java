@@ -1,9 +1,16 @@
 package ca.deflector.passable_shots;
 
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -12,6 +19,25 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        try {
+            File sample = new File(Environment.getExternalStorageDirectory() + "/sample.jpg");
+            byte[] bytes = new byte[(int) sample.length()];
+            FileInputStream fis = new FileInputStream(sample);
+            int count = 0;
+            while (count < bytes.length) {
+                int read = fis.read(bytes, count, bytes.length - count);
+                count += read;
+            }
+            fis.close();
+            EncryptionSystem.initKey();
+            byte[] encrypted = EncryptionSystem.encrypt(bytes);
+            FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/sample.encrypted");
+            fos.write(encrypted);
+            fos.close();
+        } catch (Exception e) {
+            Log.wtf("ps", "?", e);
+        }
     }
 
 
