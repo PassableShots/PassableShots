@@ -2,9 +2,12 @@ package ca.deflector.passable_shots;
 
 import android.os.Environment;
 
+import org.spongycastle.openpgp.PGPCompressedDataGenerator;
 import org.spongycastle.openpgp.PGPEncryptedData;
 import org.spongycastle.openpgp.PGPEncryptedDataGenerator;
 import org.spongycastle.openpgp.PGPException;
+import org.spongycastle.openpgp.PGPLiteralData;
+import org.spongycastle.openpgp.PGPLiteralDataGenerator;
 import org.spongycastle.openpgp.PGPPublicKey;
 import org.spongycastle.openpgp.PGPPublicKeyRing;
 import org.spongycastle.openpgp.PGPPublicKeyRingCollection;
@@ -23,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.util.Date;
 import java.util.Iterator;
 
 public class EncryptionSystem {
@@ -51,19 +55,29 @@ public class EncryptionSystem {
 
 
     public static byte[] encrypt(byte[] payload) throws IOException, PGPException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream packetBaos = new ByteArrayOutputStream();
+        PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
+        OutputStream packetOut = lData.open(packetBaos, PGPLiteralData.BINARY, "picture.jpeg", payload.length, new Date());
+
+        packetOut.write(payload);
+        packetOut.close();
+        byte[]packet =packetBaos.toByteArray();
 
         PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(
-                new JcePGPDataEncryptorBuilder(PGPEncryptedData.CAST5).setWithIntegrityPacket(true).setSecureRandom(new SecureRandom()).setProvider("SC"));
+                new JcePGPDataEncryptorBuilder(PGPEncryptedData.CAST5)
+                        .setWithIntegrityPacket(true)
+                        .setSecureRandom(new SecureRandom())
+                        .setProvider("SC"));
 
         encGen.addMethod(new JcePublicKeyKeyEncryptionMethodGenerator(key).setProvider("SC"));
 
-        OutputStream cOut = encGen.open(baos, payload.length);
+        ByteArrayOutputStream resultBaos = new ByteArrayOutputStream();
 
-        cOut.write(payload);
-        cOut.close();
+        OutputStream encOut = encGen.open(resultBaos, packet.length);
+        encOut.write(packet);
+        encOut.close();
 
-        byte[] result = baos.toByteArray();
+        byte[] result = resultBaos.toByteArray();
 
         return result;
     }
