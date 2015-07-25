@@ -13,9 +13,11 @@ import org.spongycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
 import org.spongycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
 import org.spongycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodGenerator;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,12 +31,26 @@ public class EncryptionSystem {
         Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
     }
 
-    public static byte[] encrypt(byte[] payload, byte[] public_key) throws IOException, PGPException {
+    public static void initKey(File keyring) throws IOException, PGPException {
+        key = readPublicKeyFromCol(new FileInputStream(keyring));
 
+    }
+
+    public static void initKey(byte[] keyringBytes) throws IOException, PGPException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(keyringBytes);
+        key = readPublicKeyFromCol(bais);
+        bais.close();
+    }
+
+    public static void initKey() throws IOException, PGPException {
         File keyring = new File(Environment.getExternalStorageDirectory() + "/passable.key");
+        initKey(keyring);
+    }
 
-        PGPPublicKey key = readPublicKeyFromCol(new FileInputStream(keyring));
+    private static PGPPublicKey key = null;
 
+
+    public static byte[] encrypt(byte[] payload) throws IOException, PGPException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator(
