@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/PassableShots.iml" filepath="$PROJECT_DIR$/PassableShots.iml" />
-      <module fileurl="file:///raid/home/pablo/various/foulab/passable_shots/PassableShots/app/app.iml" filepath="/raid/home/pablo/various/foulab/passable_shots/PassableShots/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
 </project>

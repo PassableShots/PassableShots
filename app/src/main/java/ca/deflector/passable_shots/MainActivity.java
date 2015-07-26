@@ -1,17 +1,19 @@
 package ca.deflector.passable_shots;
 
-import android.os.Environment;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.util.Log;
+import android.view.View;
+
+import java.io.IOException;
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback {
     SurfaceView surfaceView;
     SurfaceHolder surfaceHolder;
     Camera.PictureCallback encryptCallback;
+    Camera camera;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         } catch (Exception e) {
             Log.wtf("ps", "?", e);
         } */
+    }
+
+    public void captureImage(View v) throws IOException {
+        //take the picture
+        camera.takePicture(null, null, null, encryptCallback);
     }
 
     @Override
