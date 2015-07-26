@@ -1,65 +1,114 @@
 package ca.deflector.passable_shots;
 
-import android.os.Environment;
-import android.support.v7.app.ActionBarActivity;
+import android.content.pm.ActivityInfo;
+import android.hardware.Camera;
 import android.os.Bundle;
+import android.app.Activity;
+import android.os.Environment;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity implements SurfaceHolder.Callback {
+    SurfaceView surfaceView;
+    SurfaceHolder surfaceHolder;
+    Camera.PictureCallback encryptCallback;
+    Camera camera;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+        surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
+        surfaceHolder = surfaceView.getHolder();
+        surfaceHolder.addCallback(this);
+        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         try {
-            File sample = new File(Environment.getExternalStorageDirectory() + "/sample.jpg");
-            byte[] bytes = new byte[(int) sample.length()];
-            FileInputStream fis = new FileInputStream(sample);
-            int count = 0;
-            while (count < bytes.length) {
-                int read = fis.read(bytes, count, bytes.length - count);
-                count += read;
-            }
-            fis.close();
             EncryptionSystem.initKey();
-            byte[] encrypted = EncryptionSystem.encrypt(bytes);
-            FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/sample.encrypted");
-            fos.write(encrypted);
-            fos.close();
         } catch (Exception e) {
+            //TODO show an error message and disable the button
             Log.wtf("ps", "?", e);
         }
+
+        encryptCallback = new Camera.PictureCallback() {
+            @Override
+            public void onPictureTaken(byte[] data, Camera camera) {
+                // call encryption here
+                try {
+                    byte[] encrypted = EncryptionSystem.encrypt(data);
+                    FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/passable." + System.currentTimeMillis());
+                    fos.write(encrypted);
+                    fos.close();
+                } catch (Exception e) {
+                    Log.wtf("init", e);
+                }
+                refreshCamera();
+            }
+        };
+
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    public void captureImage(View v) throws IOException {
+        //take the picture
+        camera.takePicture(null, null, null, encryptCallback);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    public void surfaceCreated(SurfaceHolder holder) {
+        try {
+            camera = Camera.open();
+        } catch (RuntimeException e) {
+            Log.wtf("create", e);
+            return;
         }
+        //Camera.Parameters param = camera.getParameters();
+        //param.setPreviewSize(holder.getSurfaceFrame().width(), holder.getSurfaceFrame().height());
+        //camera.setParameters(param);
+        try {
+            camera.setPreviewDisplay(holder);
+            camera.startPreview();
+        } catch (Exception e) {
+            Log.wtf("create2", e);
+        }
+    }
 
-        return super.onOptionsItemSelected(item);
+    private void refreshCamera() {
+        if (surfaceHolder.getSurface() == null)
+            return;
+
+        try {
+            camera.stopPreview();
+        } catch (Exception e) {
+            Log.wtf("refresh", e);
+        }
+        //Camera.Parameters param = camera.getParameters();
+        //param.setPreviewSize(surfaceHolder.getSurfaceFrame().width(), surfaceHolder.getSurfaceFrame().height());
+        //camera.setParameters(param);
+        try {
+            camera.setPreviewDisplay(surfaceHolder);
+            camera.startPreview();
+        } catch (Exception e) {
+            Log.wtf("refresh2", e);
+        }
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int fmt, int w, int h) {
+        refreshCamera();
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        camera.stopPreview();
+        camera.release();
+        camera = null;
     }
 }
