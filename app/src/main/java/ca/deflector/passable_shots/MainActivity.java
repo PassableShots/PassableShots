@@ -27,6 +27,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         surfaceView = (SurfaceView) findViewById(R.id.surfaceView);
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
+        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
@@ -68,10 +69,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             Log.wtf("create", e);
             return;
         }
-        Camera.Parameters param = camera.getParameters();
-
-        param.setPreviewSize(holder.getSurfaceFrame().width(), holder.getSurfaceFrame().height());
-        camera.setParameters(param);
+        //Camera.Parameters param = camera.getParameters();
+        //param.setPreviewSize(holder.getSurfaceFrame().width(), holder.getSurfaceFrame().height());
+        //camera.setParameters(param);
         try {
             camera.setPreviewDisplay(holder);
             camera.startPreview();
@@ -89,9 +89,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         } catch (Exception e) {
             Log.wtf("refresh", e);
         }
-        Camera.Parameters param = camera.getParameters();
-        param.setPreviewSize(surfaceHolder.getSurfaceFrame().width(), surfaceHolder.getSurfaceFrame().height());
-        camera.setParameters(param);
+        //Camera.Parameters param = camera.getParameters();
+        //param.setPreviewSize(surfaceHolder.getSurfaceFrame().width(), surfaceHolder.getSurfaceFrame().height());
+        //camera.setParameters(param);
         try {
             camera.setPreviewDisplay(surfaceHolder);
             camera.startPreview();
