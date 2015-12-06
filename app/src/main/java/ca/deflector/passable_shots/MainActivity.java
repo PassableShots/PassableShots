@@ -10,6 +10,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -44,7 +45,20 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
                 // call encryption here
                 try {
                     byte[] encrypted = EncryptionSystem.encrypt(data);
-                    FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() + "/passable." + System.currentTimeMillis());
+                    // determine latest number
+                    int maxPassableFile = 0;
+                    for (File f : Environment.getExternalStorageDirectory().listFiles())
+                        if (f.isFile()) {
+                            String name = f.getName();
+                            if (name.startsWith("passable.") && name.matches("passable\\.[0-9]+")) {
+                                int passableFile = Integer.parseInt(name.substring("passable.".length()));
+                                if (passableFile > maxPassableFile)
+                                    maxPassableFile = passableFile;
+                            }
+                        }
+                    maxPassableFile++;
+                    FileOutputStream fos = new FileOutputStream(Environment.getExternalStorageDirectory() +
+                            "/passable." + String.valueOf(maxPassableFile));
                     fos.write(encrypted);
                     fos.close();
                 } catch (Exception e) {
